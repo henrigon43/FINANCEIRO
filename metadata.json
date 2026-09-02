@@ -1,0 +1,7 @@
+{
+  "name": "Controle Financeiro Pessoal",
+  "description": "Aplicativo web completo para controle de despesas, receitas, parcelas, contas fixas, cartões de crédito e planejamento financeiro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
