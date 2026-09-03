@@ -1,0 +1,29 @@
+[
+  {
+    "createdAt": "2026-09-03T11:56:09.676Z",
+    "name": "Administrador Master",
+    "username": "admin",
+    "password": "123",
+    "isActive": true,
+    "id": "user_master",
+    "role": "admin"
+  },
+  {
+    "name": "Rosimere",
+    "password": "2468",
+    "isActive": true,
+    "id": "user_1788437650962_cnbdx",
+    "createdAt": "2026-09-03T12:14:10.962Z",
+    "role": "user",
+    "username": "rosimere"
+  },
+  {
+    "name": "Henrique e Lorrayne",
+    "createdAt": "2026-09-03T12:15:53.672Z",
+    "username": "henriqueelorrayne",
+    "password": "1234",
+    "role": "user",
+    "isActive": true,
+    "id": "user_1788437753672_bjiyg"
+  }
+]

@@ -504,9 +504,29 @@ export const AdminUsersView: React.FC<{ onNavigateToExpenses?: () => void }> = (
                   required
                   placeholder="Ex: carloseduardo"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                  onChange={(e) => {
+                    setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''));
+                    setFormError(null);
+                  }}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
                 />
+                {!editingUser && username.trim() && users.some(u => u.username.toLowerCase() === username.trim().toLowerCase()) && (
+                  <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center justify-between gap-2">
+                    <span>
+                      O login <strong>@{username.trim().toLowerCase()}</strong> já está cadastrado para <strong>{users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())?.name}</strong>.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+                        if (target) openEditModal(target);
+                      }}
+                      className="px-2 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 text-[11px] font-bold rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                      Editar Dados
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Senha */}
