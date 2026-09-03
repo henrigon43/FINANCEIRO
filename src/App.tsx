@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
 import { Navigation, NavTab } from './components/Navigation';
 import { Header } from './components/Header';
@@ -17,15 +18,37 @@ import { CreditCardsView } from './components/CreditCardsView';
 import { ReportsView } from './components/ReportsView';
 import { GoalsView } from './components/GoalsView';
 import { SettingsView } from './components/SettingsView';
+import { AdminUsersView } from './components/AdminUsersView';
+import { LoginView } from './components/LoginView';
+import { NotificationModal } from './components/NotificationModal';
 import { NewExpenseModal } from './components/NewExpenseModal';
 import { NewIncomeModal } from './components/NewIncomeModal';
 import { Expense } from './types';
+import { ArrowLeft, ShieldAlert } from 'lucide-react';
 
 function FinanceAppContent() {
+  const { currentUser, isLoading, activeViewingUser, stopImpersonation } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
+
+  // Pop up de notificação abre automaticamente ao abrir ou atualizar a página
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(true);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm font-semibold text-slate-300">Carregando sistema financeiro...</p>
+      </div>
+    );
+  }
+
+  // Redirecionamento obrigatório para tela de Login caso não esteja autenticado
+  if (!currentUser) {
+    return <LoginView />;
+  }
 
   const handleOpenNewExpense = () => {
     setExpenseToEdit(null);
@@ -42,69 +65,107 @@ function FinanceAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col md:flex-row text-slate-900 font-sans antialiased">
-      {/* Sidebar Navigation (Desktop) & Bottom Bar (Mobile) */}
-      <Navigation currentTab={currentTab} onSelectTab={setCurrentTab} />
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col text-slate-900 font-sans antialiased">
+      {/* Impersonation Top Banner (quando Master inspeciona planilha de outro usuário) */}
+      {activeViewingUser && (
+        <div className="bg-amber-400 text-slate-950 px-4 py-2.5 text-xs font-semibold flex flex-col sm:flex-row items-center justify-between gap-2 shadow-xs sticky top-0 z-50">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-slate-950 shrink-0" />
+            <span>
+              Você está visualizando a planilha de <strong>{activeViewingUser.name}</strong> (@{activeViewingUser.username}). As alterações são salvas para este usuário.
+            </span>
+          </div>
+          <button
+            onClick={stopImpersonation}
+            className="flex items-center gap-1.5 px-3 py-1 bg-slate-950 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Voltar para Master</span>
+          </button>
+        </div>
+      )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-6">
-        {/* Top Header with Month Navigator & Quick Actions */}
-        <Header 
-          onOpenNewExpense={handleOpenNewExpense}
-          onOpenNewIncome={handleOpenNewIncome}
-        />
+      <div className="flex-1 flex flex-col md:flex-row">
+        {/* Sidebar Navigation (Desktop) & Bottom Bar (Mobile) */}
+        <Navigation currentTab={currentTab} onSelectTab={setCurrentTab} />
 
-        {/* Dynamic View Container */}
-        <main className="flex-1 px-4 sm:px-8 py-8 max-w-7xl w-full mx-auto">
-          {currentTab === 'dashboard' && (
-            <Dashboard 
-              onOpenNewExpense={handleOpenNewExpense}
-              onViewExpenses={() => setCurrentTab('expenses')}
-            />
-          )}
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-6">
+          {/* Top Header with Month Navigator, Sync, Alerts and Quick Actions */}
+          <Header 
+            onOpenNewExpense={handleOpenNewExpense}
+            onOpenNewIncome={handleOpenNewIncome}
+            onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
+          />
 
-          {currentTab === 'expenses' && (
-            <ExpensesList 
-              onEditExpense={handleEditExpense}
-              onOpenNewExpense={handleOpenNewExpense}
-            />
-          )}
+          {/* Dynamic View Container */}
+          <main className="flex-1 px-4 sm:px-8 py-8 max-w-7xl w-full mx-auto">
+            {currentTab === 'dashboard' && (
+              <Dashboard 
+                onOpenNewExpense={handleOpenNewExpense}
+                onViewExpenses={() => setCurrentTab('expenses')}
+              />
+            )}
 
-          {currentTab === 'incomes' && (
-            <IncomesView onOpenNewIncome={handleOpenNewIncome} />
-          )}
+            {currentTab === 'expenses' && (
+              <ExpensesList 
+                onEditExpense={handleEditExpense}
+                onOpenNewExpense={handleOpenNewExpense}
+              />
+            )}
 
-          {currentTab === 'calendar' && (
-            <FinancialCalendar />
-          )}
+            {currentTab === 'incomes' && (
+              <IncomesView onOpenNewIncome={handleOpenNewIncome} />
+            )}
 
-          {currentTab === 'cards' && (
-            <CreditCardsView />
-          )}
+            {currentTab === 'calendar' && (
+              <FinancialCalendar />
+            )}
 
-          {currentTab === 'recurring' && (
-            <RecurringExpenses />
-          )}
+            {currentTab === 'cards' && (
+              <CreditCardsView />
+            )}
 
-          {currentTab === 'forecast' && (
-            <ForecastView />
-          )}
+            {currentTab === 'recurring' && (
+              <RecurringExpenses />
+            )}
 
-          {currentTab === 'reports' && (
-            <ReportsView />
-          )}
+            {currentTab === 'forecast' && (
+              <ForecastView />
+            )}
 
-          {currentTab === 'goals' && (
-            <GoalsView />
-          )}
+            {currentTab === 'reports' && (
+              <ReportsView />
+            )}
 
-          {currentTab === 'settings' && (
-            <SettingsView />
-          )}
-        </main>
+            {currentTab === 'goals' && (
+              <GoalsView />
+            )}
+
+            {currentTab === 'users' && (
+              <AdminUsersView 
+                onNavigateToExpenses={() => setCurrentTab('dashboard')}
+              />
+            )}
+
+            {currentTab === 'settings' && (
+              <SettingsView />
+            )}
+          </main>
+        </div>
       </div>
 
-      {/* Modals */}
+      {/* Pop-up de Notificação (abre na inicialização/atualização ou pelo sino) */}
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        onViewExpenses={() => {
+          setIsNotificationModalOpen(false);
+          setCurrentTab('expenses');
+        }}
+      />
+
+      {/* Modals de Nova Despesa e Receita */}
       <NewExpenseModal
         isOpen={isExpenseModalOpen}
         onClose={() => {
@@ -124,9 +185,11 @@ function FinanceAppContent() {
 
 export default function App() {
   return (
-    <FinanceProvider>
-      <FinanceAppContent />
-    </FinanceProvider>
+    <AuthProvider>
+      <FinanceProvider>
+        <FinanceAppContent />
+      </FinanceProvider>
+    </AuthProvider>
   );
 }
 

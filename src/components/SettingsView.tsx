@@ -11,7 +11,11 @@ import {
   RotateCcw, 
   Check, 
   AlertTriangle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Database,
+  RefreshCw,
+  Smartphone,
+  Laptop
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
@@ -24,7 +28,11 @@ export const SettingsView: React.FC = () => {
     recurringExpenses, 
     creditCards, 
     goals,
-    resetToSeedData
+    resetToSeedData,
+    syncStatus,
+    lastSyncedAt,
+    forceSync,
+    isFirebaseConnected
   } = useFinance();
 
   const [newCatName, setNewCatName] = useState('');
@@ -123,6 +131,78 @@ export const SettingsView: React.FC = () => {
           <span>{message}</span>
         </div>
       )}
+
+      {/* Firebase Cloud Firestore Multi-Device Sync Card */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                <Database className="w-5 h-5 text-indigo-600" />
+                Banco de Dados Firebase Firestore & Sincronização Multi-Dispositivo
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Nuvem Ativa
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Todas as receitas, despesas, parcelamentos e cartões são sincronizados em tempo real no Firebase Firestore. Qualquer mudança feita no celular, computador ou tablet é atualizada instantaneamente em todos os seus aparelhos.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              await forceSync();
+              setMessage('Firebase Firestore sincronizado com sucesso!');
+              setTimeout(() => setMessage(''), 3500);
+            }}
+            className="self-start sm:self-auto py-2 px-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors shadow-2xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+            Sincronizar Agora
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="p-3.5 rounded-lg border border-slate-100 bg-slate-50/70 flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full shrink-0 ${
+              syncStatus === 'synced' ? 'bg-emerald-500 ring-4 ring-emerald-100' :
+              syncStatus === 'syncing' ? 'bg-amber-500 animate-pulse ring-4 ring-amber-100' : 'bg-rose-500'
+            }`} />
+            <div>
+              <span className="text-[11px] font-bold text-slate-700 block">Status da Conexão</span>
+              <span className="text-xs text-slate-600">
+                {syncStatus === 'synced' 
+                  ? (isFirebaseConnected ? 'Firebase Conectado (Nuvem)' : 'Conectado & Sincronizado') 
+                  : syncStatus === 'syncing' ? 'Gravando alterações...' : 'Erro de conexão'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-lg border border-slate-100 bg-slate-50/70 flex items-center gap-3">
+            <div className="p-1.5 rounded-md bg-white border border-slate-200 text-slate-600 shrink-0">
+              <Smartphone className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-700 block">Acesso em Outros Aparelhos</span>
+              <span className="text-xs text-slate-600">
+                Celular, tablet e computador
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-lg border border-slate-100 bg-slate-50/70 flex items-center gap-3">
+            <div className="p-1.5 rounded-md bg-white border border-slate-200 text-slate-600 shrink-0">
+              <Laptop className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-700 block">Última Sincronização</span>
+              <span className="text-xs text-slate-600">
+                {lastSyncedAt ? lastSyncedAt.toLocaleTimeString('pt-BR') : 'Em tempo real'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Backup & Export Section */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">

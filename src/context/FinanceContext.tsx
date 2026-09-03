@@ -25,6 +25,8 @@ import {
   toDateString, 
   getDaysDifference 
 } from '../utils/formatters';
+import { db, doc, setDoc, getDoc, onSnapshot } from '../firebase';
+import { useAuth } from './AuthContext';
 
 interface FinanceContextType {
   // Navigation / Active period
@@ -121,6 +123,12 @@ interface FinanceContextType {
   importFromJSON: (jsonData: string) => boolean;
   resetAllData: () => void;
   loadDemoData: () => void;
+
+  // Cloud Database Sync
+  syncStatus: 'synced' | 'syncing' | 'error';
+  lastSyncedAt: Date | null;
+  forceSync: () => Promise<void>;
+  isFirebaseConnected: boolean;
 }
 
 const STORAGE_KEY = 'finance_manager_state_v1';
@@ -128,58 +136,97 @@ const STORAGE_KEY = 'finance_manager_state_v1';
 export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { currentUser, effectiveUserId, activeViewingUser } = useAuth();
+
   // Initialize to August 2026 (Month index 7) to showcase the rich prompt data immediately
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [selectedMonth, setSelectedMonth] = useState<number>(7); // Agosto (0-indexed)
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('finance_selected_year');
+      if (stored) return parseInt(stored, 10);
+      return new Date().getFullYear();
+    } catch {
+      return 2026;
+    }
+  });
+
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('finance_selected_month');
+      if (stored !== null) return parseInt(stored, 10);
+      return new Date().getMonth(); // Defaults to current active month (Setembro)
+    } catch {
+      return 8;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('finance_selected_year', String(selectedYear));
+    } catch {}
+  }, [selectedYear]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('finance_selected_month', String(selectedMonth));
+    } catch {}
+  }, [selectedMonth]);
+
+  // Storage key helper per active user
+  const getUserKey = (suffix: string) => `finanz_user_${effectiveUserId}_${suffix}`;
 
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_expenses`);
-      return stored ? JSON.parse(stored) : SEED_EXPENSES;
+      const stored = localStorage.getItem(getUserKey('expenses'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_EXPENSES : [];
     } catch {
-      return SEED_EXPENSES;
+      return effectiveUserId === 'user_master' ? SEED_EXPENSES : [];
     }
   });
 
   const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_recurring`);
-      return stored ? JSON.parse(stored) : SEED_RECURRING;
+      const stored = localStorage.getItem(getUserKey('recurring'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_RECURRING : [];
     } catch {
-      return SEED_RECURRING;
+      return effectiveUserId === 'user_master' ? SEED_RECURRING : [];
     }
   });
 
   const [incomes, setIncomes] = useState<Income[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_incomes`);
-      return stored ? JSON.parse(stored) : SEED_INCOMES;
+      const stored = localStorage.getItem(getUserKey('incomes'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_INCOMES : [];
     } catch {
-      return SEED_INCOMES;
+      return effectiveUserId === 'user_master' ? SEED_INCOMES : [];
     }
   });
 
   const [creditCards, setCreditCards] = useState<CreditCard[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_cards`);
-      return stored ? JSON.parse(stored) : SEED_CREDIT_CARDS;
+      const stored = localStorage.getItem(getUserKey('cards'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_CREDIT_CARDS : [];
     } catch {
-      return SEED_CREDIT_CARDS;
+      return effectiveUserId === 'user_master' ? SEED_CREDIT_CARDS : [];
     }
   });
 
   const [goals, setGoals] = useState<FinancialGoal[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_goals`);
-      return stored ? JSON.parse(stored) : SEED_GOALS;
+      const stored = localStorage.getItem(getUserKey('goals'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_GOALS : [];
     } catch {
-      return SEED_GOALS;
+      return effectiveUserId === 'user_master' ? SEED_GOALS : [];
     }
   });
 
   const [categories, setCategories] = useState<Category[]>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_categories`);
+      const stored = localStorage.getItem(getUserKey('categories'));
       return stored ? JSON.parse(stored) : DEFAULT_CATEGORIES;
     } catch {
       return DEFAULT_CATEGORIES;
@@ -188,9 +235,9 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_settings`);
+      const stored = localStorage.getItem(getUserKey('settings'));
       return stored ? JSON.parse(stored) : {
-        userName: 'Usuário',
+        userName: activeViewingUser?.name || currentUser?.name || 'Usuário',
         currency: 'BRL',
         pinEnabled: false,
         pinCode: '1234',
@@ -199,7 +246,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       };
     } catch {
       return {
-        userName: 'Usuário',
+        userName: activeViewingUser?.name || currentUser?.name || 'Usuário',
         currency: 'BRL',
         pinEnabled: false,
         pinCode: '1234',
@@ -213,34 +260,431 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     return settings.pinEnabled;
   });
 
-  // Sync state changes to localStorage
+  // Cloud Database Sync State (Firebase Firestore + Server Backup)
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('syncing');
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(true);
+  
+  // Deterministic Fingerprint & State Tracking Refs
+  const isInitialLoadDoneRef = React.useRef<boolean>(false);
+  const lastAppliedFingerprintRef = React.useRef<string>('');
+  const syncDebounceTimerRef = React.useRef<any>(null);
+
+  // Helper to calculate a deterministic fingerprint of finance state
+  const getFingerprint = (data: {
+    expenses?: any[];
+    recurringExpenses?: any[];
+    incomes?: any[];
+    creditCards?: any[];
+    goals?: any[];
+    categories?: any[];
+    settings?: any;
+  }) => {
+    try {
+      return JSON.stringify({
+        e: data.expenses || [],
+        r: data.recurringExpenses || [],
+        i: data.incomes || [],
+        c: data.creditCards || [],
+        g: data.goals || [],
+        cat: data.categories || [],
+        s: data.settings || {},
+      });
+    } catch {
+      return String(Date.now());
+    }
+  };
+
+  // Helper to ensure clean JSON object for Firestore
+  const sanitizeForFirestore = (obj: any) => {
+    try {
+      return JSON.parse(JSON.stringify(obj));
+    } catch {
+      return obj;
+    }
+  };
+
+  // Helper to apply incoming database data to React state
+  const applyRemoteData = React.useCallback((data: any, force: boolean = false) => {
+    if (!data) return;
+
+    const fingerprint = getFingerprint({
+      expenses: data.expenses,
+      recurringExpenses: data.recurringExpenses,
+      incomes: data.incomes,
+      creditCards: data.creditCards,
+      goals: data.goals,
+      categories: data.categories,
+      settings: data.settings,
+    });
+
+    // If identical to what this client already has or just saved, avoid re-render loops (unless forced)
+    if (!force && fingerprint === lastAppliedFingerprintRef.current) {
+      return;
+    }
+
+    // Set ref BEFORE triggering React state updates so outgoing effect knows this is from remote
+    lastAppliedFingerprintRef.current = fingerprint;
+
+    if (Array.isArray(data.expenses)) setExpenses(data.expenses);
+    if (Array.isArray(data.recurringExpenses)) setRecurringExpenses(data.recurringExpenses);
+    if (Array.isArray(data.incomes)) setIncomes(data.incomes);
+    if (Array.isArray(data.creditCards)) setCreditCards(data.creditCards);
+    if (Array.isArray(data.goals)) setGoals(data.goals);
+    if (Array.isArray(data.categories)) setCategories(data.categories);
+    if (data.settings && typeof data.settings === 'object') setSettings(data.settings);
+
+    setSyncStatus('synced');
+    setLastSyncedAt(new Date());
+    setIsFirebaseConnected(true);
+  }, []);
+
+  // Sync state changes to localStorage (offline cache per user)
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_expenses`, JSON.stringify(expenses));
-  }, [expenses]);
+    try {
+      localStorage.setItem(getUserKey('expenses'), JSON.stringify(expenses));
+    } catch {}
+  }, [expenses, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_recurring`, JSON.stringify(recurringExpenses));
-  }, [recurringExpenses]);
+    try {
+      localStorage.setItem(getUserKey('recurring'), JSON.stringify(recurringExpenses));
+    } catch {}
+  }, [recurringExpenses, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_incomes`, JSON.stringify(incomes));
-  }, [incomes]);
+    try {
+      localStorage.setItem(getUserKey('incomes'), JSON.stringify(incomes));
+    } catch {}
+  }, [incomes, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_cards`, JSON.stringify(creditCards));
-  }, [creditCards]);
+    try {
+      localStorage.setItem(getUserKey('cards'), JSON.stringify(creditCards));
+    } catch {}
+  }, [creditCards, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_goals`, JSON.stringify(goals));
-  }, [goals]);
+    try {
+      localStorage.setItem(getUserKey('goals'), JSON.stringify(goals));
+    } catch {}
+  }, [goals, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_categories`, JSON.stringify(categories));
-  }, [categories]);
+    try {
+      localStorage.setItem(getUserKey('categories'), JSON.stringify(categories));
+    } catch {}
+  }, [categories, effectiveUserId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_settings`, JSON.stringify(settings));
-  }, [settings]);
+    try {
+      localStorage.setItem(getUserKey('settings'), JSON.stringify(settings));
+    } catch {}
+  }, [settings, effectiveUserId]);
+
+  // 1. Initial Load & Real-Time Sync via Firebase Firestore onSnapshot + Server Fetch for effectiveUserId
+  useEffect(() => {
+    let isMounted = true;
+    isInitialLoadDoneRef.current = false;
+
+    // Fast load from user's local cache if exists, or reset to empty if new regular user
+    try {
+      const cachedExpenses = localStorage.getItem(getUserKey('expenses'));
+      if (cachedExpenses) {
+        setExpenses(JSON.parse(cachedExpenses));
+      } else if (effectiveUserId !== 'user_master') {
+        setExpenses([]);
+      }
+
+      const cachedRecurring = localStorage.getItem(getUserKey('recurring'));
+      if (cachedRecurring) {
+        setRecurringExpenses(JSON.parse(cachedRecurring));
+      } else if (effectiveUserId !== 'user_master') {
+        setRecurringExpenses([]);
+      }
+
+      const cachedIncomes = localStorage.getItem(getUserKey('incomes'));
+      if (cachedIncomes) {
+        setIncomes(JSON.parse(cachedIncomes));
+      } else if (effectiveUserId !== 'user_master') {
+        setIncomes([]);
+      }
+
+      const cachedCards = localStorage.getItem(getUserKey('cards'));
+      if (cachedCards) {
+        setCreditCards(JSON.parse(cachedCards));
+      } else if (effectiveUserId !== 'user_master') {
+        setCreditCards([]);
+      }
+
+      const cachedGoals = localStorage.getItem(getUserKey('goals'));
+      if (cachedGoals) {
+        setGoals(JSON.parse(cachedGoals));
+      } else if (effectiveUserId !== 'user_master') {
+        setGoals([]);
+      }
+    } catch {}
+
+    const userDocRef = doc(db, 'finance_users', effectiveUserId);
+
+    // Immediate fast fetch from server API
+    fetch(`/api/finance/data?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && isMounted) {
+          applyRemoteData(data, true);
+          isInitialLoadDoneRef.current = true;
+        }
+      })
+      .catch((e) => console.warn('Initial server fetch note:', e));
+
+    // Subscribe to real-time changes from Firestore client SDK for this user
+    const unsubscribe = onSnapshot(
+      userDocRef,
+      async (snapshot) => {
+        if (!isMounted) return;
+
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          applyRemoteData(data);
+        } else if (effectiveUserId === 'user_master') {
+          // Check legacy primary document for backwards compatibility
+          try {
+            const legacyDoc = await getDoc(doc(db, 'finance_data', 'primary'));
+            if (legacyDoc.exists()) {
+              applyRemoteData(legacyDoc.data());
+              // Clone to new user doc
+              setDoc(userDocRef, { ...legacyDoc.data(), userId: 'user_master' }).catch(() => {});
+            }
+          } catch {}
+        }
+
+        isInitialLoadDoneRef.current = true;
+        setIsFirebaseConnected(true);
+        setSyncStatus('synced');
+      },
+      (error) => {
+        console.warn('Firestore listener fallback to server API:', error);
+        setIsFirebaseConnected(false);
+        // Fallback to server fetch
+        fetch(`/api/finance/data?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && isMounted) {
+              applyRemoteData(data);
+            }
+          })
+          .catch(() => setSyncStatus('error'))
+          .finally(() => {
+            if (isMounted) isInitialLoadDoneRef.current = true;
+          });
+      }
+    );
+
+    // Cross-device synchronization handler (for Mobile <-> PC instant sync)
+    const handleRemoteRefresh = () => {
+      if (!isMounted) return;
+      fetch(`/api/finance/data?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && isMounted) {
+            applyRemoteData(data);
+          }
+        })
+        .catch(() => {});
+    };
+
+    // Trigger sync when tab becomes visible or focused
+    const onVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        handleRemoteRefresh();
+      }
+    };
+
+    window.addEventListener('focus', onVisibilityOrFocus);
+    document.addEventListener('visibilitychange', onVisibilityOrFocus);
+
+    // Periodic heartbeat sync every 8 seconds to catch external changes from PC/Mobile
+    const syncInterval = setInterval(handleRemoteRefresh, 8000);
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+      window.removeEventListener('focus', onVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', onVisibilityOrFocus);
+      clearInterval(syncInterval);
+    };
+  }, [effectiveUserId, applyRemoteData]);
+
+  // 2. Outgoing Auto-Save to Firebase Firestore & Server Backup whenever local state changes
+  useEffect(() => {
+    // Do not sync until initial database load has resolved
+    if (!isInitialLoadDoneRef.current) return;
+
+    const currentFingerprint = getFingerprint({
+      expenses,
+      recurringExpenses,
+      incomes,
+      creditCards,
+      goals,
+      categories,
+      settings,
+    });
+
+    // If current state matches what was applied from remote or already saved, skip write
+    if (currentFingerprint === lastAppliedFingerprintRef.current) {
+      return;
+    }
+
+    if (syncDebounceTimerRef.current) {
+      clearTimeout(syncDebounceTimerRef.current);
+    }
+
+    setSyncStatus('syncing');
+
+    syncDebounceTimerRef.current = setTimeout(async () => {
+      // Mark as applied to prevent echo loops
+      lastAppliedFingerprintRef.current = currentFingerprint;
+
+      const payload = sanitizeForFirestore({
+        userId: effectiveUserId,
+        expenses,
+        recurringExpenses,
+        incomes,
+        creditCards,
+        goals,
+        categories,
+        settings,
+        updatedAt: new Date().toISOString(),
+      });
+
+      let serverOk = false;
+      // 1. Post to Server API (saves to Firestore on server + local user file)
+      try {
+        const res = await fetch('/api/finance/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) serverOk = true;
+      } catch (err) {
+        console.warn('Server sync warning:', err);
+      }
+
+      // 2. Also save directly to Firebase Firestore client SDK for instant cross-device mobile/PC sync
+      try {
+        const userDocRef = doc(db, 'finance_users', effectiveUserId);
+        await setDoc(userDocRef, payload, { merge: true });
+
+        // If master user, also keep legacy primary document updated
+        if (effectiveUserId === 'user_master') {
+          setDoc(doc(db, 'finance_data', 'primary'), payload, { merge: true }).catch(() => {});
+        }
+
+        setSyncStatus('synced');
+        setLastSyncedAt(new Date());
+        setIsFirebaseConnected(true);
+      } catch (fbErr) {
+        console.warn('Firestore direct write warning:', fbErr);
+        if (serverOk) {
+          setSyncStatus('synced');
+          setLastSyncedAt(new Date());
+          setIsFirebaseConnected(true);
+        } else {
+          setSyncStatus('error');
+        }
+      }
+    }, 150);
+
+    return () => {
+      if (syncDebounceTimerRef.current) {
+        clearTimeout(syncDebounceTimerRef.current);
+      }
+    };
+  }, [effectiveUserId, expenses, recurringExpenses, incomes, creditCards, goals, categories, settings]);
+
+  // 3. Mobile Wake-Up & Tab Visibility Safety Net (Crucial for smartphones!)
+  useEffect(() => {
+    let lastCheckedTimestamp = '';
+
+    const checkAndSync = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetch(`/api/finance/version?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`)
+          .then((res) => res.json())
+          .then((ver) => {
+            if (ver.success && ver.lastModified && ver.lastModified !== lastCheckedTimestamp) {
+              lastCheckedTimestamp = ver.lastModified;
+              fetch(`/api/finance/data?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`)
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.success) {
+                    applyRemoteData(data);
+                  }
+                })
+                .catch(() => {});
+            }
+          })
+          .catch(() => {
+            // Fallback direct getDoc
+            const userDocRef = doc(db, 'finance_users', effectiveUserId);
+            getDoc(userDocRef)
+              .then((snap) => {
+                if (snap.exists()) {
+                  applyRemoteData(snap.data());
+                }
+              })
+              .catch(() => {});
+          });
+      }
+    };
+
+    window.addEventListener('visibilitychange', checkAndSync);
+    window.addEventListener('focus', checkAndSync);
+
+    // Regular poll every 3 seconds when app is active on screen
+    const pollInterval = setInterval(checkAndSync, 3000);
+
+    return () => {
+      window.removeEventListener('visibilitychange', checkAndSync);
+      window.removeEventListener('focus', checkAndSync);
+      clearInterval(pollInterval);
+    };
+  }, [effectiveUserId, applyRemoteData]);
+
+  // 4. Manual forceSync handler
+  const forceSync = async () => {
+    try {
+      setSyncStatus('syncing');
+      // Fetch fresh data from server API with cache busting
+      const res = await fetch(`/api/finance/data?userId=${encodeURIComponent(effectiveUserId)}&t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          applyRemoteData(data, true);
+          setSyncStatus('synced');
+          setLastSyncedAt(new Date());
+          setIsFirebaseConnected(true);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Force sync server fetch note:', err);
+    }
+
+    try {
+      const userDocRef = doc(db, 'finance_users', effectiveUserId);
+      const snap = await getDoc(userDocRef);
+      if (snap.exists()) {
+        applyRemoteData(snap.data(), true);
+        setSyncStatus('synced');
+        setLastSyncedAt(new Date());
+        setIsFirebaseConnected(true);
+      }
+    } catch (err) {
+      console.error('Force sync failed:', err);
+      setSyncStatus('error');
+    }
+  };
 
   // Navigation handlers
   const goToNextMonth = () => {
@@ -855,18 +1299,59 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const resetAllData = () => {
+  const resetAllData = async () => {
     setExpenses([]);
     setRecurringExpenses([]);
     setIncomes([]);
     setGoals([]);
-    localStorage.removeItem(`${STORAGE_KEY}_expenses`);
-    localStorage.removeItem(`${STORAGE_KEY}_recurring`);
-    localStorage.removeItem(`${STORAGE_KEY}_incomes`);
-    localStorage.removeItem(`${STORAGE_KEY}_goals`);
+    setCreditCards([]);
+    try {
+      localStorage.removeItem(getUserKey('expenses'));
+      localStorage.removeItem(getUserKey('recurring'));
+      localStorage.removeItem(getUserKey('incomes'));
+      localStorage.removeItem(getUserKey('goals'));
+      localStorage.removeItem(getUserKey('cards'));
+
+      const userDocRef = doc(db, 'finance_users', effectiveUserId);
+      await setDoc(userDocRef, sanitizeForFirestore({
+        userId: effectiveUserId,
+        expenses: [],
+        recurringExpenses: [],
+        incomes: [],
+        creditCards: [],
+        goals: [],
+        categories,
+        settings,
+        updatedAt: new Date().toISOString(),
+      }));
+
+      await fetch(`/api/finance/reset-user-sheet/${encodeURIComponent(effectiveUserId)}`, {
+        method: 'POST',
+      });
+      setLastSyncedAt(new Date());
+      setSyncStatus('synced');
+    } catch {
+      // Offline fallback handled
+    }
   };
 
-  const loadDemoData = () => {
+  const loadDemoData = async () => {
+    try {
+      setSyncStatus('syncing');
+      const res = await fetch('/api/finance/reset', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          applyRemoteData(data);
+          setSelectedYear(2026);
+          setSelectedMonth(7);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Reset request failed, falling back to local seed data:', e);
+    }
+
     setExpenses(SEED_EXPENSES);
     setRecurringExpenses(SEED_RECURRING);
     setIncomes(SEED_INCOMES);
@@ -938,6 +1423,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         importFromJSON,
         resetAllData,
         loadDemoData,
+        syncStatus,
+        lastSyncedAt,
+        forceSync,
+        isFirebaseConnected,
       }}
     >
       {children}

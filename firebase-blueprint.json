@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an application user and their authentication role",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the user" },
+        "username": { "type": "string", "description": "Login username" },
+        "name": { "type": "string", "description": "Display name of the user" },
+        "password": { "type": "string", "description": "User password" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Role of the user (admin or user)" },
+        "createdAt": { "type": "string", "description": "Creation timestamp ISO string" },
+        "isActive": { "type": "boolean", "description": "Whether user account is active" }
+      },
+      "required": ["id", "username", "name", "role", "createdAt", "isActive"]
+    },
+    "UserFinanceData": {
+      "title": "UserFinanceData",
+      "description": "The complete finance spreadsheet data for a specific user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "expenses": { "type": "array", "description": "List of user expenses" },
+        "recurringExpenses": { "type": "array", "description": "List of recurring expenses" },
+        "incomes": { "type": "array", "description": "List of incomes" },
+        "creditCards": { "type": "array", "description": "List of credit cards" },
+        "goals": { "type": "array", "description": "List of financial goals" },
+        "categories": { "type": "array", "description": "List of categories" },
+        "settings": { "type": "object", "description": "User financial settings" },
+        "updatedAt": { "type": "string", "description": "Last updated timestamp" }
+      },
+      "required": ["userId", "expenses", "incomes", "categories"]
+    }
+  },
+  "firestore": {
+    "/finance_system/users": {
+      "schema": "User",
+      "description": "Global user accounts registry managed by master admin"
+    },
+    "/finance_users/{userId}": {
+      "schema": "UserFinanceData",
+      "description": "User-isolated financial data and spreadsheets"
+    }
+  }
+}

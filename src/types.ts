@@ -102,3 +102,16 @@ export interface UserSettings {
   notificationsEnabled: boolean;
   alertDaysAhead: number;
 }
+
+export type UserRole = 'admin' | 'user';
+
+export interface AppUser {
+  id: string;
+  username: string; // login em minúsculas
+  name: string;
+  password?: string;
+  role: UserRole;
+  createdAt: string;
+  isActive: boolean;
+  lastLogin?: string;
+}

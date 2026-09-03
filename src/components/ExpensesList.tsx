@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { Expense, ExpenseStatus, ExpenseType, PaymentMethod } from '../types';
-import { formatCurrency, formatDateBR, formatDateShortBR, getDaysDifference, toDateString } from '../utils/formatters';
+import { formatCurrency, formatDateBR, formatDateShortBR, getDaysDifference, toDateString, MONTH_NAMES_BR } from '../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
 import { 
   Search, 
@@ -174,11 +174,11 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
           {/* Quick Period Segmented Buttons */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg overflow-x-auto text-xs shrink-0">
             {[
-              { id: 'este_mes', label: 'Este Mês' },
+              { id: 'este_mes', label: `Este Mês (${MONTH_NAMES_BR[selectedMonth] || ''})` },
               { id: 'hoje', label: 'Hoje' },
               { id: 'esta_semana', label: 'Esta Semana' },
               { id: 'proximo_mes', label: 'Próximo Mês' },
-              { id: 'todos', label: 'Todos' },
+              { id: 'todos', label: 'Ver Todas' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -298,16 +298,26 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
       {/* TABELA DE DESPESAS */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {filteredExpenses.length === 0 ? (
-          <div className="py-16 text-center text-slate-400">
+          <div className="py-16 text-center text-slate-400 px-4">
             <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-            <p className="text-sm font-semibold text-slate-600">Nenhuma despesa encontrada</p>
-            <p className="text-xs text-slate-400 mt-1">Tente ajustar os filtros ou cadastrar uma nova despesa.</p>
-            <button
-              onClick={onOpenNewExpense}
-              className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-xs"
-            >
-              + Cadastrar Despesa
-            </button>
+            <p className="text-sm font-semibold text-slate-700">Nenhuma despesa para {MONTH_NAMES_BR[selectedMonth]} de {selectedYear}</p>
+            <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+              Você tem {expenses.length} despesa(s) cadastradas no total no banco de dados sincronizado.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button
+                onClick={() => setPeriodFilter('todos')}
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
+              >
+                Ver Todas as Despesas ({expenses.length})
+              </button>
+              <button
+                onClick={onOpenNewExpense}
+                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+              >
+                + Nova Despesa
+              </button>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
