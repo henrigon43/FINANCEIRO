@@ -18,6 +18,7 @@ import {
   Laptop
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import { PWAInstallCard } from './PWAInstallCard';
 
 export const SettingsView: React.FC = () => {
   const { 
@@ -131,6 +132,9 @@ export const SettingsView: React.FC = () => {
           <span>{message}</span>
         </div>
       )}
+
+      {/* App Mobile & Icon Card */}
+      <PWAInstallCard />
 
       {/* Firebase Cloud Firestore Multi-Device Sync Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">

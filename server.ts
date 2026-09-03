@@ -551,6 +551,9 @@ async function startServer() {
     }
   });
 
+  // Serve public directory for icons, manifest and static assets
+  app.use(express.static(path.join(process.cwd(), "public")));
+
   // Vite middleware for development or Static files for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

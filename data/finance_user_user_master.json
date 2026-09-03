@@ -1,0 +1,553 @@
+{
+  "version": 412,
+  "lastModified": "2026-09-03T12:11:30.513Z",
+  "expenses": [
+    {
+      "type": "unica",
+      "paymentMethod": "debito",
+      "paymentDate": "2026-08-12",
+      "amount": 450,
+      "categoryId": "cat-alimentacao",
+      "status": "pago",
+      "description": "Mercado Mensal",
+      "dueDate": "2026-08-12",
+      "createdAt": "2026-08-12T14:00:00Z",
+      "id": "exp-ago-mercado",
+      "purchaseDate": "2026-08-12"
+    },
+    {
+      "status": "pago",
+      "type": "unica",
+      "id": "exp-ago-restaurante",
+      "cardId": "card-nubank",
+      "amount": 300,
+      "categoryId": "cat-alimentacao",
+      "createdAt": "2026-08-16T21:00:00Z",
+      "paymentDate": "2026-08-16",
+      "purchaseDate": "2026-08-16",
+      "dueDate": "2026-08-16",
+      "description": "Jantar Restaurante",
+      "paymentMethod": "credito"
+    },
+    {
+      "amount": 150,
+      "paymentMethod": "pix",
+      "paymentDate": "2026-08-20",
+      "purchaseDate": "2026-08-20",
+      "id": "exp-ago-feira",
+      "description": "Hortifruti & Feira",
+      "status": "pago",
+      "dueDate": "2026-08-20",
+      "createdAt": "2026-08-20T10:00:00Z",
+      "categoryId": "cat-alimentacao",
+      "type": "unica"
+    },
+    {
+      "paymentMethod": "boleto",
+      "notes": "Atenção: Vencido em 20/08!",
+      "dueDate": "2026-08-20",
+      "purchaseDate": "2026-08-10",
+      "createdAt": "2026-08-10T11:00:00Z",
+      "description": "Combustível Posto (Boleto)",
+      "status": "vencido",
+      "categoryId": "cat-transporte",
+      "amount": 350,
+      "type": "unica",
+      "id": "exp-ago-combustivel"
+    },
+    {
+      "status": "pendente",
+      "paymentMethod": "credito",
+      "cardId": "card-nubank",
+      "dueDate": "2026-08-30",
+      "type": "unica",
+      "amount": 300,
+      "description": "Uber & Transporte App",
+      "createdAt": "2026-08-25T09:00:00Z",
+      "purchaseDate": "2026-08-25",
+      "categoryId": "cat-transporte",
+      "id": "exp-ago-uber"
+    },
+    {
+      "description": "Cinema e Passeio Final de Semana",
+      "purchaseDate": "2026-08-22",
+      "dueDate": "2026-08-29",
+      "id": "exp-ago-lazer",
+      "categoryId": "cat-lazer",
+      "type": "unica",
+      "amount": 400,
+      "status": "pendente",
+      "createdAt": "2026-08-22T15:00:00Z",
+      "paymentMethod": "credito",
+      "cardId": "card-nubank"
+    },
+    {
+      "status": "pendente",
+      "id": "exp-ago-tv",
+      "amount": 200,
+      "type": "parcelada",
+      "totalInstallments": 12,
+      "dueDate": "2026-08-27",
+      "categoryId": "cat-compras",
+      "cardId": "card-nubank",
+      "createdAt": "2026-06-20T10:00:00Z",
+      "purchaseDate": "2026-06-20",
+      "installmentGroupId": "grp-tv-2400",
+      "installmentNumber": 3,
+      "description": "Smart TV 55\" 4K",
+      "paymentMethod": "credito"
+    },
+    {
+      "categoryId": "cat-compras",
+      "description": "Camisas Básicas",
+      "paymentMethod": "pix",
+      "dueDate": "2026-08-31",
+      "createdAt": "2026-08-26T18:00:00Z",
+      "id": "exp-ago-roupas",
+      "amount": 100,
+      "type": "unica",
+      "status": "pendente",
+      "purchaseDate": "2026-08-26"
+    },
+    {
+      "type": "unica",
+      "createdAt": "2026-08-05T09:00:00Z",
+      "dueDate": "2026-08-25",
+      "description": "Energia Elétrica",
+      "paymentMethod": "pix",
+      "amount": 320,
+      "id": "exp-ago-contas-luz",
+      "status": "pendente",
+      "categoryId": "cat-contas",
+      "purchaseDate": "2026-08-05"
+    },
+    {
+      "categoryId": "cat-saude",
+      "id": "exp-ago-saude-dentista",
+      "createdAt": "2026-08-27T16:00:00Z",
+      "purchaseDate": "2026-08-27",
+      "type": "unica",
+      "status": "pendente",
+      "amount": 450,
+      "dueDate": "2026-08-31",
+      "paymentMethod": "pix",
+      "description": "Consulta Dentista"
+    },
+    {
+      "type": "fixa",
+      "categoryId": "cat-assinaturas",
+      "paymentDate": "2026-08-15",
+      "description": "Netflix e Spotify",
+      "purchaseDate": "2026-08-15",
+      "dueDate": "2026-08-15",
+      "id": "exp-ago-assinaturas",
+      "status": "pago",
+      "cardId": "card-nubank",
+      "paymentMethod": "credito",
+      "createdAt": "2026-08-15T12:00:00Z",
+      "amount": 60
+    },
+    {
+      "description": "Mensalidade Academia",
+      "categoryId": "cat-saude",
+      "createdAt": "2026-08-20T08:00:00Z",
+      "id": "exp-ago-academia",
+      "paymentMethod": "debito",
+      "status": "pendente",
+      "type": "fixa",
+      "purchaseDate": "2026-08-20",
+      "amount": 100,
+      "dueDate": "2026-08-28"
+    },
+    {
+      "purchaseDate": "2026-08-28",
+      "createdAt": "2026-08-28T11:00:00Z",
+      "paymentMethod": "pix",
+      "description": "Ração e Pet Shop",
+      "type": "unica",
+      "categoryId": "cat-pets",
+      "id": "exp-ago-pets",
+      "status": "pendente",
+      "amount": 380,
+      "dueDate": "2026-08-30"
+    },
+    {
+      "description": "Celular Smartphone (3/12)",
+      "categoryId": "cat-compras",
+      "createdAt": "2026-07-20T10:00:00Z",
+      "id": "exp-set-celular",
+      "purchaseDate": "2026-07-20",
+      "dueDate": "2026-09-20",
+      "totalInstallments": 12,
+      "paymentMethod": "credito",
+      "cardId": "card-nubank",
+      "installmentGroupId": "grp-celular-2400",
+      "type": "parcelada",
+      "installmentNumber": 3,
+      "amount": 200,
+      "status": "pendente"
+    },
+    {
+      "amount": 200,
+      "totalInstallments": 12,
+      "description": "Smart TV 55\" 4K (4/12)",
+      "status": "pendente",
+      "paymentMethod": "credito",
+      "purchaseDate": "2026-06-20",
+      "id": "exp-set-tv",
+      "type": "parcelada",
+      "installmentGroupId": "grp-tv-2400",
+      "cardId": "card-nubank",
+      "categoryId": "cat-compras",
+      "dueDate": "2026-09-27",
+      "installmentNumber": 4,
+      "createdAt": "2026-06-20T10:00:00Z"
+    },
+    {
+      "status": "pendente",
+      "id": "exp-set-academia",
+      "cardId": "card-nubank",
+      "dueDate": "2026-09-20",
+      "createdAt": "2026-08-30T10:00:00Z",
+      "type": "fixa",
+      "amount": 100,
+      "recurringId": "rec-academia",
+      "description": "Academia",
+      "paymentMethod": "credito",
+      "purchaseDate": "2026-09-01",
+      "categoryId": "cat-saude"
+    },
+    {
+      "purchaseDate": "2026-06-15",
+      "status": "pago",
+      "dueDate": "2026-06-25",
+      "categoryId": "cat-outros",
+      "paymentMethod": "pix",
+      "type": "unica",
+      "amount": 4800,
+      "createdAt": "2026-06-01T10:00:00Z",
+      "description": "Despesas Consolidadas Junho",
+      "id": "exp-jun-total",
+      "paymentDate": "2026-06-25"
+    },
+    {
+      "purchaseDate": "2026-07-15",
+      "createdAt": "2026-07-01T10:00:00Z",
+      "type": "unica",
+      "dueDate": "2026-07-25",
+      "categoryId": "cat-outros",
+      "description": "Despesas Consolidadas Julho",
+      "amount": 5100,
+      "paymentMethod": "pix",
+      "status": "pago",
+      "paymentDate": "2026-07-25",
+      "id": "exp-jul-total"
+    }
+  ],
+  "recurringExpenses": [
+    {
+      "status": "active",
+      "id": "rec-aluguel",
+      "categoryId": "cat-moradia",
+      "notes": "Transferência para o proprietário",
+      "description": "Aluguel",
+      "createdAt": "2026-01-01T10:00:00Z",
+      "amount": 1500,
+      "dueDay": 5,
+      "startDate": "2026-01-01",
+      "paymentMethod": "pix"
+    },
+    {
+      "amount": 300,
+      "description": "Condomínio",
+      "createdAt": "2026-01-01T10:00:00Z",
+      "paymentMethod": "boleto",
+      "categoryId": "cat-moradia",
+      "status": "active",
+      "startDate": "2026-01-01",
+      "id": "rec-condominio",
+      "dueDay": 10
+    },
+    {
+      "id": "rec-internet",
+      "status": "active",
+      "amount": 120,
+      "startDate": "2026-01-01",
+      "dueDay": 10,
+      "paymentMethod": "debito",
+      "description": "Internet Fibra",
+      "createdAt": "2026-01-01T10:00:00Z",
+      "categoryId": "cat-contas"
+    },
+    {
+      "description": "Netflix",
+      "paymentMethod": "credito",
+      "dueDay": 15,
+      "id": "rec-netflix",
+      "startDate": "2026-01-01",
+      "status": "active",
+      "categoryId": "cat-assinaturas",
+      "cardId": "card-nubank",
+      "createdAt": "2026-01-01T10:00:00Z",
+      "amount": 39.9
+    },
+    {
+      "description": "Academia",
+      "cardId": "card-nubank",
+      "paymentMethod": "credito",
+      "createdAt": "2026-01-01T10:00:00Z",
+      "status": "active",
+      "amount": 100,
+      "dueDay": 20,
+      "startDate": "2026-01-01",
+      "categoryId": "cat-saude",
+      "id": "rec-academia"
+    }
+  ],
+  "incomes": [
+    {
+      "amount": 3500,
+      "categoryId": "cat-salario",
+      "recurringDay": 5,
+      "description": "Salário Mensal",
+      "isRecurring": true,
+      "date": "2026-08-05",
+      "status": "recebido",
+      "createdAt": "2026-08-01T08:00:00Z",
+      "id": "inc-salario-ago"
+    },
+    {
+      "id": "inc-freelance-ago",
+      "categoryId": "cat-freelance",
+      "createdAt": "2026-08-10T08:00:00Z",
+      "status": "recebido",
+      "date": "2026-08-15",
+      "description": "Freelance Design",
+      "amount": 1500,
+      "isRecurring": false
+    },
+    {
+      "isRecurring": true,
+      "createdAt": "2026-08-01T08:00:00Z",
+      "description": "Salário Mensal",
+      "categoryId": "cat-salario",
+      "recurringDay": 5,
+      "status": "previsto",
+      "id": "inc-salario-set",
+      "date": "2026-09-05",
+      "amount": 3500
+    },
+    {
+      "createdAt": "2026-08-25T08:00:00Z",
+      "status": "previsto",
+      "id": "inc-freelance-set",
+      "categoryId": "cat-freelance",
+      "amount": 1800,
+      "isRecurring": false,
+      "date": "2026-09-18",
+      "description": "Consultoria Dev"
+    }
+  ],
+  "creditCards": [
+    {
+      "color": "#820AD1",
+      "id": "card-nubank",
+      "closingDay": 20,
+      "name": "Nubank Roxinho",
+      "last4Digits": "4921",
+      "bank": "Nubank",
+      "dueDay": 27,
+      "limit": 5000
+    },
+    {
+      "closingDay": 10,
+      "last4Digits": "8310",
+      "limit": 8000,
+      "name": "Inter Black",
+      "color": "#FF7A00",
+      "dueDay": 18,
+      "id": "card-inter",
+      "bank": "Banco Inter"
+    }
+  ],
+  "goals": [
+    {
+      "title": "Reserva de Emergência",
+      "targetDate": "2026-12-31",
+      "color": "#10B981",
+      "id": "goal-reserva",
+      "targetAmount": 20000,
+      "currentAmount": 12500
+    },
+    {
+      "targetDate": "2026-11-30",
+      "targetAmount": 6000,
+      "id": "goal-viagem",
+      "currentAmount": 3800,
+      "title": "Viagem de Fim de Ano",
+      "color": "#3B82F6"
+    }
+  ],
+  "categories": [
+    {
+      "icon": "Home",
+      "id": "cat-moradia",
+      "isDefault": true,
+      "color": "#3B82F6",
+      "type": "expense",
+      "name": "Moradia"
+    },
+    {
+      "color": "#F97316",
+      "type": "expense",
+      "id": "cat-alimentacao",
+      "name": "Alimentação",
+      "icon": "Utensils",
+      "isDefault": true
+    },
+    {
+      "id": "cat-transporte",
+      "color": "#06B6D4",
+      "isDefault": true,
+      "icon": "Car",
+      "type": "expense",
+      "name": "Transporte"
+    },
+    {
+      "id": "cat-cartao",
+      "color": "#8B5CF6",
+      "isDefault": true,
+      "type": "expense",
+      "name": "Cartão",
+      "icon": "CreditCard"
+    },
+    {
+      "color": "#EC4899",
+      "id": "cat-compras",
+      "type": "expense",
+      "name": "Compras",
+      "isDefault": true,
+      "icon": "ShoppingBag"
+    },
+    {
+      "name": "Saúde",
+      "type": "expense",
+      "color": "#EF4444",
+      "id": "cat-saude",
+      "isDefault": true,
+      "icon": "HeartPulse"
+    },
+    {
+      "id": "cat-lazer",
+      "type": "expense",
+      "name": "Lazer",
+      "isDefault": true,
+      "icon": "Gamepad2",
+      "color": "#10B981"
+    },
+    {
+      "isDefault": true,
+      "id": "cat-assinaturas",
+      "color": "#6366F1",
+      "type": "expense",
+      "name": "Assinaturas",
+      "icon": "Tv"
+    },
+    {
+      "icon": "Coins",
+      "isDefault": true,
+      "color": "#EAB308",
+      "id": "cat-financiamentos",
+      "type": "expense",
+      "name": "Financiamento"
+    },
+    {
+      "name": "Educação",
+      "color": "#14B8A6",
+      "type": "expense",
+      "isDefault": true,
+      "id": "cat-educacao",
+      "icon": "GraduationCap"
+    },
+    {
+      "name": "Pets",
+      "type": "expense",
+      "isDefault": true,
+      "color": "#F59E0B",
+      "id": "cat-pets",
+      "icon": "PawPrint"
+    },
+    {
+      "color": "#A855F7",
+      "name": "Roupas",
+      "type": "expense",
+      "isDefault": true,
+      "id": "cat-roupas",
+      "icon": "Shirt"
+    },
+    {
+      "color": "#0EA5E9",
+      "icon": "Plane",
+      "name": "Viagens",
+      "type": "expense",
+      "id": "cat-viagens",
+      "isDefault": true
+    },
+    {
+      "color": "#F43F5E",
+      "icon": "Lightbulb",
+      "id": "cat-contas",
+      "type": "expense",
+      "name": "Contas",
+      "isDefault": true
+    },
+    {
+      "icon": "Package",
+      "id": "cat-outros",
+      "type": "expense",
+      "isDefault": true,
+      "name": "Outros",
+      "color": "#64748B"
+    },
+    {
+      "icon": "Briefcase",
+      "id": "cat-salario",
+      "isDefault": true,
+      "type": "income",
+      "color": "#10B981",
+      "name": "Salário"
+    },
+    {
+      "type": "income",
+      "isDefault": true,
+      "id": "cat-freelance",
+      "name": "Freelance",
+      "icon": "Laptop",
+      "color": "#3B82F6"
+    },
+    {
+      "type": "income",
+      "isDefault": true,
+      "name": "Investimentos",
+      "id": "cat-investimentos",
+      "color": "#8B5CF6",
+      "icon": "TrendingUp"
+    },
+    {
+      "icon": "DollarSign",
+      "id": "cat-receita-outros",
+      "color": "#14B8A6",
+      "isDefault": true,
+      "type": "income",
+      "name": "Outras Receitas"
+    }
+  ],
+  "settings": {
+    "currency": "BRL",
+    "userName": "Usuário",
+    "notificationsEnabled": true,
+    "pinEnabled": false,
+    "pinCode": "1234",
+    "alertDaysAhead": 7
+  }
+}

@@ -46,9 +46,11 @@ export const LoginView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-7 sm:p-8">
           {/* Header Brand */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/30 mb-4">
-              <span className="text-white font-black text-2xl leading-none">$</span>
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Finanz" 
+              className="w-16 h-16 object-contain mx-auto mb-3 drop-shadow-md"
+            />
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Finanz</h1>
             <p className="text-sm text-slate-500 mt-1 font-medium">
               Controle Financeiro

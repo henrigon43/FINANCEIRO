@@ -93,9 +93,11 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
           {!isCollapsed ? (
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-xs shrink-0">
-                  <span className="text-white font-bold text-lg leading-none">$</span>
-                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="Finanz" 
+                  className="w-9 h-9 object-contain shrink-0 drop-shadow-xs"
+                />
                 <div>
                   <h1 className="font-bold text-xl tracking-tight text-slate-900 leading-none">Finanz</h1>
                   <span className="text-[10px] text-slate-600 font-medium tracking-wide uppercase">Multi-Usuário</span>
@@ -126,11 +128,15 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
                 <Menu className="w-5 h-5" />
               </button>
               <div 
-                className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-xs shrink-0 cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center shrink-0 cursor-pointer hover:scale-105 transition-transform"
                 onClick={toggleCollapsed}
                 title="Finanz - Clique para expandir"
               >
-                <span className="text-white font-bold text-lg leading-none">$</span>
+                <img 
+                  src="/logo.png" 
+                  alt="Finanz" 
+                  className="w-8 h-8 object-contain drop-shadow-xs"
+                />
               </div>
             </div>
           )}
@@ -337,9 +343,11 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                    $
-                  </div>
+                  <img 
+                    src="/logo.png" 
+                    alt="Finanz" 
+                    className="w-7 h-7 object-contain shrink-0" 
+                  />
                   <div>
                     <span className="font-bold text-slate-900 text-sm block leading-tight">Finanz</span>
                     <span className="text-[10px] text-slate-500">Logado: {currentUser?.name}</span>
