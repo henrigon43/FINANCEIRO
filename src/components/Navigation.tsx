@@ -16,7 +16,8 @@ import {
   Users,
   LogOut,
   ArrowLeft,
-  Shield
+  Shield,
+  FileSignature
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +29,7 @@ export type NavTab =
   | 'calendar' 
   | 'cards' 
   | 'recurring' 
+  | 'contracts'
   | 'forecast' 
   | 'reports' 
   | 'goals' 

@@ -11,7 +11,8 @@ import {
   SEED_RECURRING, 
   SEED_INCOMES, 
   SEED_CREDIT_CARDS, 
-  SEED_GOALS 
+  SEED_GOALS,
+  SEED_CONTRACTS
 } from "./src/data/seedData";
 
 // Server-side Firebase Firestore initialization
@@ -27,6 +28,7 @@ interface DatabaseSchema {
   creditCards: any[];
   goals: any[];
   categories: any[];
+  contracts?: any[];
   settings: any;
 }
 
@@ -96,6 +98,7 @@ function getBlankUserData(userName?: string): DatabaseSchema {
     creditCards: [],
     goals: [],
     categories: DEFAULT_CATEGORIES,
+    contracts: [],
     settings: {
       userName: userName || "Usuário",
       currency: "BRL",
@@ -117,6 +120,7 @@ function getDefaultData(): DatabaseSchema {
     creditCards: SEED_CREDIT_CARDS,
     goals: SEED_GOALS,
     categories: DEFAULT_CATEGORIES,
+    contracts: SEED_CONTRACTS,
     settings: {
       userName: "Alex Mendes (Master)",
       currency: "BRL",
@@ -151,6 +155,7 @@ function loadUserDatabase(userId: string): DatabaseSchema {
         creditCards: Array.isArray(parsed.creditCards) ? parsed.creditCards : [],
         goals: Array.isArray(parsed.goals) ? parsed.goals : [],
         categories: Array.isArray(parsed.categories) ? parsed.categories : DEFAULT_CATEGORIES,
+        contracts: Array.isArray(parsed.contracts) ? parsed.contracts : (userId === "user_master" ? SEED_CONTRACTS : []),
         settings: parsed.settings || getBlankUserData().settings,
       };
     }
@@ -401,6 +406,7 @@ async function startServer() {
           creditCards: Array.isArray(data.creditCards) ? data.creditCards : [],
           goals: Array.isArray(data.goals) ? data.goals : [],
           categories: Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES,
+          contracts: Array.isArray(data.contracts) ? data.contracts : [],
           settings: data.settings || currentDb.settings,
         };
         saveUserDatabase(userId, updatedDb);
@@ -475,6 +481,7 @@ async function startServer() {
         creditCards: payload.creditCards !== undefined ? payload.creditCards : currentDb.creditCards,
         goals: payload.goals !== undefined ? payload.goals : currentDb.goals,
         categories: payload.categories !== undefined ? payload.categories : currentDb.categories,
+        contracts: payload.contracts !== undefined ? payload.contracts : currentDb.contracts,
         settings: payload.settings !== undefined ? payload.settings : currentDb.settings,
       };
 

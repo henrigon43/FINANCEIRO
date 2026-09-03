@@ -1,4 +1,4 @@
-import { Expense, RecurringExpense, Income, CreditCard, FinancialGoal } from '../types';
+import { Expense, RecurringExpense, Income, CreditCard, FinancialGoal, FinancialContract } from '../types';
 
 export const SEED_CREDIT_CARDS: CreditCard[] = [
   {
@@ -524,3 +524,52 @@ export const SEED_EXPENSES: Expense[] = [
     createdAt: '2026-07-01T10:00:00Z',
   }
 ];
+
+export const SEED_CONTRACTS: FinancialContract[] = [
+  {
+    id: 'contract-apt-caixa',
+    title: 'Financiamento Apartamento',
+    type: 'financiamento_imovel',
+    financialInstitution: 'Caixa Econômica Federal',
+    contractNumber: '8472.0194.5510',
+    totalMonths: 360,
+    paidMonths: 48,
+    monthlyPayment: 2650.00,
+    totalAmount: 380000.00,
+    downPayment: 80000.00,
+    outstandingBalance: 298400.00,
+    dueDay: 15,
+    startDate: '2022-09-15',
+    endDate: '2052-09-15',
+    nextDueDate: '2026-09-15',
+    paymentMethod: 'boleto',
+    status: 'ativo',
+    notes: 'Sistema SAC com taxa efetiva de 8,9% a.a. Amortização mensal.',
+    autoSyncExpense: true,
+    createdAt: '2022-09-01T10:00:00Z',
+  },
+  {
+    id: 'contract-car-localiza',
+    title: 'Assinatura Carro - SUV Compass',
+    type: 'veiculo_assinatura',
+    financialInstitution: 'Localiza Meoo',
+    contractNumber: 'MEOO-2025-9941',
+    totalMonths: 36,
+    paidMonths: 14,
+    monthlyPayment: 3290.00,
+    totalAmount: 118440.00,
+    downPayment: 0,
+    outstandingBalance: 72380.00,
+    dueDay: 10,
+    startDate: '2025-07-10',
+    endDate: '2028-07-10',
+    nextDueDate: '2026-09-10',
+    paymentMethod: 'credito',
+    cardId: 'card-nubank',
+    status: 'ativo',
+    notes: 'Franquia de 1.500 km/mês. IPVA, seguro e manutenção inclusos.',
+    autoSyncExpense: true,
+    createdAt: '2025-07-01T10:00:00Z',
+  }
+];
+

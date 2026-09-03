@@ -5,6 +5,7 @@ import {
   Income, 
   CreditCard, 
   FinancialGoal, 
+  FinancialContract,
   Category, 
   UserSettings,
   ExpenseStatus,
@@ -17,7 +18,8 @@ import {
   SEED_RECURRING, 
   SEED_INCOMES, 
   SEED_CREDIT_CARDS, 
-  SEED_GOALS 
+  SEED_GOALS,
+  SEED_CONTRACTS
 } from '../data/seedData';
 import { 
   isSameMonthYear, 
@@ -101,6 +103,13 @@ interface FinanceContextType {
   addCategory: (category: Omit<Category, 'id'>) => void;
   updateCategory: (id: string, category: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+
+  // Contracts Actions
+  contracts: FinancialContract[];
+  addContract: (contractData: Omit<FinancialContract, 'id' | 'createdAt'>) => void;
+  updateContract: (id: string, updated: Partial<FinancialContract>) => void;
+  deleteContract: (id: string) => void;
+  payContractInstallment: (id: string) => void;
 
   // Summaries & Derived Stats
   monthExpenses: Expense[];
@@ -233,6 +242,16 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   });
 
+  const [contracts, setContracts] = useState<FinancialContract[]>(() => {
+    try {
+      const stored = localStorage.getItem(getUserKey('contracts'));
+      if (stored) return JSON.parse(stored);
+      return effectiveUserId === 'user_master' ? SEED_CONTRACTS : [];
+    } catch {
+      return effectiveUserId === 'user_master' ? SEED_CONTRACTS : [];
+    }
+  });
+
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const stored = localStorage.getItem(getUserKey('settings'));
@@ -278,6 +297,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     creditCards?: any[];
     goals?: any[];
     categories?: any[];
+    contracts?: any[];
     settings?: any;
   }) => {
     try {
@@ -288,6 +308,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         c: data.creditCards || [],
         g: data.goals || [],
         cat: data.categories || [],
+        con: data.contracts || [],
         s: data.settings || {},
       });
     } catch {
@@ -315,6 +336,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       creditCards: data.creditCards,
       goals: data.goals,
       categories: data.categories,
+      contracts: data.contracts,
       settings: data.settings,
     });
 
@@ -332,6 +354,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (Array.isArray(data.creditCards)) setCreditCards(data.creditCards);
     if (Array.isArray(data.goals)) setGoals(data.goals);
     if (Array.isArray(data.categories)) setCategories(data.categories);
+    if (Array.isArray(data.contracts)) setContracts(data.contracts);
     if (data.settings && typeof data.settings === 'object') setSettings(data.settings);
 
     setSyncStatus('synced');
@@ -375,6 +398,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       localStorage.setItem(getUserKey('categories'), JSON.stringify(categories));
     } catch {}
   }, [categories, effectiveUserId]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(getUserKey('contracts'), JSON.stringify(contracts));
+    } catch {}
+  }, [contracts, effectiveUserId]);
 
   useEffect(() => {
     try {
@@ -422,6 +451,13 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setGoals(JSON.parse(cachedGoals));
       } else if (effectiveUserId !== 'user_master') {
         setGoals([]);
+      }
+
+      const cachedContracts = localStorage.getItem(getUserKey('contracts'));
+      if (cachedContracts) {
+        setContracts(JSON.parse(cachedContracts));
+      } else if (effectiveUserId !== 'user_master') {
+        setContracts([]);
       }
     } catch {}
 
@@ -528,6 +564,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       creditCards,
       goals,
       categories,
+      contracts,
       settings,
     });
 
@@ -554,6 +591,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         creditCards,
         goals,
         categories,
+        contracts,
         settings,
         updatedAt: new Date().toISOString(),
       });
@@ -1048,6 +1086,79 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setCategories(prev => prev.filter(c => c.id !== id));
   };
 
+  // Contracts Handlers
+  const addContract = (contractData: Omit<FinancialContract, 'id' | 'createdAt'>) => {
+    const id = `contract-${Date.now()}`;
+    const newContract: FinancialContract = {
+      ...contractData,
+      id,
+      createdAt: new Date().toISOString(),
+    };
+    setContracts(prev => [...prev, newContract]);
+  };
+
+  const updateContract = (id: string, data: Partial<FinancialContract>) => {
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  };
+
+  const deleteContract = (id: string) => {
+    setContracts(prev => prev.filter(c => c.id !== id));
+  };
+
+  const payContractInstallment = (id: string) => {
+    const contract = contracts.find(c => c.id === id);
+    if (!contract) return;
+
+    const nextPaidMonths = Math.min(contract.totalMonths, contract.paidMonths + 1);
+    const newBalance = Math.max(0, contract.outstandingBalance - contract.monthlyPayment);
+    const isNowFinished = nextPaidMonths >= contract.totalMonths;
+
+    // Calculate next due date (1 month ahead)
+    const baseDate = parseDateSafe(contract.nextDueDate);
+    const nextDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, Math.min(contract.dueDay || 10, 28));
+    const nextDueDateStr = toDateString(nextDate);
+
+    // Update contract state
+    setContracts(prev => prev.map(c => {
+      if (c.id === id) {
+        return {
+          ...c,
+          paidMonths: nextPaidMonths,
+          outstandingBalance: newBalance,
+          nextDueDate: nextDueDateStr,
+          status: isNowFinished ? 'quitado' : c.status,
+        };
+      }
+      return c;
+    }));
+
+    // Auto-create linked expense in expenses list so it appears in "Este Mês" and reports!
+    const targetCat = contract.type === 'financiamento_imovel'
+      ? (categories.find(c => c.name.toLowerCase().includes('moradia')) || categories[0])
+      : (categories.find(c => c.name.toLowerCase().includes('transporte')) || categories[0]);
+
+    const newExpense: Expense = {
+      id: `exp-contract-${id}-${nextPaidMonths}-${Date.now()}`,
+      description: `${contract.title} (${nextPaidMonths}/${contract.totalMonths})`,
+      amount: contract.monthlyPayment,
+      categoryId: targetCat?.id || categories[0]?.id || 'cat-moradia',
+      purchaseDate: toDateString(new Date()),
+      dueDate: contract.nextDueDate,
+      paymentMethod: contract.paymentMethod,
+      cardId: contract.cardId,
+      type: 'parcelada',
+      status: 'pago',
+      paymentDate: toDateString(new Date()),
+      installmentNumber: nextPaidMonths,
+      totalInstallments: contract.totalMonths,
+      contractId: contract.id,
+      notes: `Baixa de parcela referente a ${contract.financialInstitution}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    setExpenses(prev => [...prev, newExpense]);
+  };
+
   // PIN / Security
   const unlockApp = (pin: string): boolean => {
     if (!settings.pinEnabled || pin === settings.pinCode) {
@@ -1239,6 +1350,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       creditCards,
       goals,
       categories,
+      contracts,
       settings,
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -1290,6 +1402,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (parsed.creditCards) setCreditCards(parsed.creditCards);
         if (parsed.goals) setGoals(parsed.goals);
         if (parsed.categories) setCategories(parsed.categories);
+        if (parsed.contracts) setContracts(parsed.contracts);
         if (parsed.settings) setSettings(parsed.settings);
         return true;
       }
@@ -1305,12 +1418,14 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setIncomes([]);
     setGoals([]);
     setCreditCards([]);
+    setContracts([]);
     try {
       localStorage.removeItem(getUserKey('expenses'));
       localStorage.removeItem(getUserKey('recurring'));
       localStorage.removeItem(getUserKey('incomes'));
       localStorage.removeItem(getUserKey('goals'));
       localStorage.removeItem(getUserKey('cards'));
+      localStorage.removeItem(getUserKey('contracts'));
 
       const userDocRef = doc(db, 'finance_users', effectiveUserId);
       await setDoc(userDocRef, sanitizeForFirestore({
@@ -1321,6 +1436,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         creditCards: [],
         goals: [],
         categories,
+        contracts: [],
         settings,
         updatedAt: new Date().toISOString(),
       }));
@@ -1358,6 +1474,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setCreditCards(SEED_CREDIT_CARDS);
     setGoals(SEED_GOALS);
     setCategories(DEFAULT_CATEGORIES);
+    setContracts(SEED_CONTRACTS);
     setSelectedYear(2026);
     setSelectedMonth(7); // Agosto 2026
   };
@@ -1378,6 +1495,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         creditCards,
         goals,
         categories,
+        contracts,
         settings,
         isLocked,
         unlockApp,
@@ -1405,6 +1523,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         addCategory,
         updateCategory,
         deleteCategory,
+        addContract,
+        updateContract,
+        deleteContract,
+        payContractInstallment,
         monthExpenses,
         monthIncomes,
         totalExpenses,

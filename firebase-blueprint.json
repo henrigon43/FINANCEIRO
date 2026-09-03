@@ -27,6 +27,7 @@
         "creditCards": { "type": "array", "description": "List of credit cards" },
         "goals": { "type": "array", "description": "List of financial goals" },
         "categories": { "type": "array", "description": "List of categories" },
+        "contracts": { "type": "array", "description": "List of financial contracts (car subscriptions, apartment financing, loans, etc.)" },
         "settings": { "type": "object", "description": "User financial settings" },
         "updatedAt": { "type": "string", "description": "Last updated timestamp" }
       },

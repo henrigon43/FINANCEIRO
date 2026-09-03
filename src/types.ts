@@ -38,6 +38,8 @@ export interface Expense {
   totalInstallments?: number;
   // Recorrência
   recurringId?: string;
+  // Contratos
+  contractId?: string;
   notes?: string;
   createdAt: string;
 }
@@ -115,3 +117,37 @@ export interface AppUser {
   isActive: boolean;
   lastLogin?: string;
 }
+
+export type ContractType = 
+  | 'veiculo_assinatura' 
+  | 'financiamento_imovel' 
+  | 'financiamento_veiculo' 
+  | 'emprestimo' 
+  | 'consorcio' 
+  | 'aluguel' 
+  | 'outros';
+
+export interface FinancialContract {
+  id: string;
+  title: string; // Ex: Assinatura Carro Localiza, Financiamento Apartamento Caixa
+  type: ContractType;
+  financialInstitution: string; // Banco ou empresa (ex: Caixa, Santander, Localiza Meoo, Itaú)
+  contractNumber?: string;
+  totalMonths: number; // Quantidade de meses totais
+  paidMonths: number; // Quantidade de meses já pagos
+  monthlyPayment: number; // Valor da parcela mensal
+  totalAmount: number; // Valor total contratado
+  downPayment?: number; // Valor de entrada
+  outstandingBalance: number; // Saldo devedor atual
+  dueDay: number; // Dia de vencimento no mês (1-31)
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  nextDueDate: string; // YYYY-MM-DD
+  paymentMethod: PaymentMethod;
+  cardId?: string;
+  status: 'ativo' | 'quitado' | 'cancelado';
+  notes?: string;
+  autoSyncExpense?: boolean; // Se lança automaticamente nas despesas do mês
+  createdAt: string;
+}
+
