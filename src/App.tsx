@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
 import { Navigation, NavTab } from './components/Navigation';
@@ -27,7 +27,7 @@ import { Expense } from './types';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
 
 function FinanceAppContent() {
-  const { currentUser, isLoading, activeViewingUser, stopImpersonation } = useAuth();
+  const { currentUser, isMasterAdmin, isLoading, activeViewingUser, stopImpersonation } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -35,6 +35,13 @@ function FinanceAppContent() {
 
   // Pop up de notificação abre automaticamente ao abrir ou atualizar a página
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(true);
+
+  // Redireciona usuário comum caso tente acessar a aba de usuários diretamente
+  useEffect(() => {
+    if (currentTab === 'users' && !isMasterAdmin) {
+      setCurrentTab('dashboard');
+    }
+  }, [currentTab, isMasterAdmin]);
 
   if (isLoading) {
     return (
@@ -142,7 +149,7 @@ function FinanceAppContent() {
               <GoalsView />
             )}
 
-            {currentTab === 'users' && (
+            {currentTab === 'users' && isMasterAdmin && (
               <AdminUsersView 
                 onNavigateToExpenses={() => setCurrentTab('dashboard')}
               />

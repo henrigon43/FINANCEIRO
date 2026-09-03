@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
   const { login } = useAuth();
@@ -33,12 +33,6 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const fillMasterCredentials = () => {
-    setUsername('admin');
-    setPassword('123');
-    setError(null);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 select-none">
       {/* Background ambient decorative shapes */}
@@ -57,26 +51,8 @@ export const LoginView: React.FC = () => {
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Finanz</h1>
             <p className="text-sm text-slate-500 mt-1 font-medium">
-              Controle Financeiro Multi-Usuário
+              Controle Financeiro
             </p>
-          </div>
-
-          {/* Quick Master Access Callout */}
-          <div className="mb-6 p-3.5 bg-indigo-50/80 border border-indigo-100 rounded-xl text-xs text-indigo-900 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
-              <div>
-                <span className="font-bold">Acesso Master: </span>
-                <span className="text-slate-600">admin / 123</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={fillMasterCredentials}
-              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-[11px] font-bold transition-colors shrink-0 cursor-pointer shadow-2xs"
-            >
-              Preencher
-            </button>
           </div>
 
           {/* Error Message */}
@@ -102,7 +78,7 @@ export const LoginView: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Ex: admin ou seu_usuario"
+                  placeholder="Digite seu login de usuário"
                   autoComplete="username"
                   autoFocus
                   required

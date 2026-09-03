@@ -24,6 +24,7 @@ import {
 export const AdminUsersView: React.FC<{ onNavigateToExpenses?: () => void }> = ({ onNavigateToExpenses }) => {
   const { 
     currentUser, 
+    isMasterAdmin,
     users, 
     createUser, 
     updateUser, 
@@ -51,6 +52,11 @@ export const AdminUsersView: React.FC<{ onNavigateToExpenses?: () => void }> = (
   const [deleteTarget, setDeleteTarget] = useState<AppUser | null>(null);
   const [resetTarget, setResetTarget] = useState<AppUser | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Confirmação de segurança: apenas o Usuário Master tem permissão
+  if (!isMasterAdmin) {
+    return null;
+  }
 
   const openCreateModal = () => {
     setEditingUser(null);

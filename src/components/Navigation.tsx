@@ -72,11 +72,13 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
     { id: 'forecast', label: 'Previsão', icon: Sparkles },
     { id: 'reports', label: 'Relatórios', icon: BarChart3 },
     { id: 'goals', label: 'Metas', icon: Target },
-    { id: 'users', label: isMasterAdmin ? 'Usuários' : 'Meu Usuário', icon: Users },
+    ...(isMasterAdmin ? [{ id: 'users' as NavTab, label: 'Usuários', icon: Users }] : []),
   ];
 
   // Primary items for mobile bottom bar
-  const mobilePrimaryTabs: NavTab[] = ['dashboard', 'expenses', 'calendar', 'cards'];
+  const mobilePrimaryTabs: NavTab[] = isMasterAdmin 
+    ? ['dashboard', 'expenses', 'calendar', 'cards']
+    : ['dashboard', 'expenses', 'incomes', 'calendar', 'cards'];
 
   return (
     <>
@@ -299,22 +301,24 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
           );
         })}
 
-        {/* Users quick access on mobile */}
-        <button
-          onClick={() => onSelectTab('users')}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-medium transition-colors ${
-            currentTab === 'users' ? 'text-indigo-600 font-bold' : 'text-slate-500'
-          }`}
-        >
-          <Users className={`w-5 h-5 mb-0.5 ${currentTab === 'users' ? 'text-indigo-600' : 'text-slate-400'}`} />
-          <span>Usuários</span>
-        </button>
+        {/* Users quick access on mobile (Exclusivo Usuário Master) */}
+        {isMasterAdmin && (
+          <button
+            onClick={() => onSelectTab('users')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-medium transition-colors ${
+              currentTab === 'users' ? 'text-indigo-600 font-bold' : 'text-slate-500'
+            }`}
+          >
+            <Users className={`w-5 h-5 mb-0.5 ${currentTab === 'users' ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span>Usuários</span>
+          </button>
+        )}
 
         {/* More button to open drawer */}
         <button
           onClick={() => setIsMobileDrawerOpen(true)}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-medium transition-colors ${
-            !mobilePrimaryTabs.includes(currentTab) && currentTab !== 'users' ? 'text-indigo-600 font-bold' : 'text-slate-500'
+            !mobilePrimaryTabs.includes(currentTab) && (!isMasterAdmin || currentTab !== 'users') ? 'text-indigo-600 font-bold' : 'text-slate-500'
           }`}
         >
           <Menu className="w-5 h-5 mb-0.5 text-slate-400" />
