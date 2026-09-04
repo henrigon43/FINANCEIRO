@@ -17,6 +17,8 @@ import { IncomesView } from './components/IncomesView';
 import { CreditCardsView } from './components/CreditCardsView';
 import { ReportsView } from './components/ReportsView';
 import { GoalsView } from './components/GoalsView';
+import { ContractsView } from './components/ContractsView';
+import { DonationView } from './components/DonationView';
 import { SettingsView } from './components/SettingsView';
 import { AdminUsersView } from './components/AdminUsersView';
 import { LoginView } from './components/LoginView';
@@ -137,6 +139,10 @@ function FinanceAppContent() {
               <RecurringExpenses />
             )}
 
+            {currentTab === 'contracts' && (
+              <ContractsView />
+            )}
+
             {currentTab === 'forecast' && (
               <ForecastView />
             )}
@@ -147,6 +153,10 @@ function FinanceAppContent() {
 
             {currentTab === 'goals' && (
               <GoalsView />
+            )}
+
+            {currentTab === 'donation' && (
+              <DonationView />
             )}
 
             {currentTab === 'users' && isMasterAdmin && (

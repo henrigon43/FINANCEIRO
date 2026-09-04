@@ -30,6 +30,7 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
   const { 
     expenses, 
     categories, 
+    creditCards,
     selectedYear, 
     selectedMonth, 
     markExpenseAsPaid, 
@@ -44,6 +45,7 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [typeFilter, setTypeFilter] = useState<string>('todos');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('todos');
+  const [cardFilter, setCardFilter] = useState<string>('todos');
   const [showFiltersBar, setShowFiltersBar] = useState(false);
 
   // Quick Action Dialog States
@@ -111,6 +113,13 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
         return false;
       }
 
+      // 7. Specific Credit Card Filter
+      if (cardFilter !== 'todos') {
+        if (expense.paymentMethod !== 'credito' || expense.cardId !== cardFilter) {
+          return false;
+        }
+      }
+
       return true;
     }).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   }, [
@@ -121,6 +130,7 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
     statusFilter, 
     typeFilter, 
     paymentMethodFilter, 
+    cardFilter,
     selectedYear, 
     selectedMonth, 
     categories
@@ -279,6 +289,23 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
                 ))}
               </select>
             </div>
+
+            {/* Cartão de Crédito Específico */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                Cartão Específico
+              </label>
+              <select
+                value={cardFilter}
+                onChange={(e) => setCardFilter(e.target.value)}
+                className="w-full text-xs py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 outline-hidden"
+              >
+                <option value="todos">Todos os cartões</option>
+                {creditCards.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
@@ -412,8 +439,35 @@ export const ExpensesList: React.FC<ExpensesListProps> = ({ onEditExpense, onOpe
                       </td>
 
                       {/* Forma de Pagamento */}
-                      <td className="py-3.5 px-4 uppercase text-[10px] font-semibold text-slate-500 whitespace-nowrap">
-                        {expense.paymentMethod}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <span className="uppercase text-[10px] font-bold text-slate-500">
+                            {expense.paymentMethod}
+                          </span>
+                          {expense.paymentMethod === 'credito' && (
+                            (() => {
+                              const card = creditCards.find(c => c.id === expense.cardId);
+                              if (card) {
+                                return (
+                                  <span 
+                                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded text-white shadow-2xs w-fit max-w-[130px] truncate"
+                                    style={{ backgroundColor: card.color || '#4F46E5' }}
+                                    title={`Cartão: ${card.name}`}
+                                  >
+                                    <CreditCard className="w-2.5 h-2.5 shrink-0" />
+                                    <span className="truncate">{card.name}</span>
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+                                  <CreditCard className="w-2.5 h-2.5 shrink-0 text-slate-400" />
+                                  <span>Crédito</span>
+                                </span>
+                              );
+                            })()
+                          )}
+                        </div>
                       </td>
 
                       {/* Status */}

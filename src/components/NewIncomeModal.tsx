@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { CategoryIcon } from './CategoryIcon';
-import { X, Check, TrendingUp, AlertCircle, Repeat } from 'lucide-react';
+import { X, Check, TrendingUp, AlertCircle, Repeat, Edit3 } from 'lucide-react';
 import { toDateString } from '../utils/formatters';
+import { Income } from '../types';
 
 interface NewIncomeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  incomeToEdit?: Income | null;
 }
 
-export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose }) => {
-  const { categories, addIncome } = useFinance();
+export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose, incomeToEdit }) => {
+  const { categories, addIncome, updateIncome } = useFinance();
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -24,18 +26,30 @@ export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose 
 
   useEffect(() => {
     if (isOpen) {
-      setDescription('');
-      setAmount('');
-      const defaultCat = categories.find(c => c.type === 'income' || c.type === 'both');
-      if (defaultCat) setCategoryId(defaultCat.id);
-      setDate(toDateString(new Date()));
-      setIsRecurring(false);
-      setRecurringDay(5);
-      setStatus('previsto');
-      setNotes('');
-      setError('');
+      if (incomeToEdit) {
+        setDescription(incomeToEdit.description || '');
+        setAmount(incomeToEdit.amount ? incomeToEdit.amount.toString().replace('.', ',') : '');
+        setCategoryId(incomeToEdit.categoryId || '');
+        setDate(incomeToEdit.date || toDateString(new Date()));
+        setIsRecurring(Boolean(incomeToEdit.isRecurring));
+        setRecurringDay(incomeToEdit.recurringDay || 5);
+        setStatus(incomeToEdit.status || 'previsto');
+        setNotes(incomeToEdit.notes || '');
+        setError('');
+      } else {
+        setDescription('');
+        setAmount('');
+        const defaultCat = categories.find(c => c.type === 'income' || c.type === 'both');
+        if (defaultCat) setCategoryId(defaultCat.id);
+        setDate(toDateString(new Date()));
+        setIsRecurring(false);
+        setRecurringDay(5);
+        setStatus('previsto');
+        setNotes('');
+        setError('');
+      }
     }
-  }, [isOpen, categories]);
+  }, [isOpen, incomeToEdit, categories]);
 
   if (!isOpen) return null;
 
@@ -56,16 +70,29 @@ export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose 
       return;
     }
 
-    addIncome({
-      description: description.trim(),
-      amount: numAmount,
-      categoryId,
-      date,
-      isRecurring,
-      recurringDay: isRecurring ? recurringDay : undefined,
-      status,
-      notes: notes.trim(),
-    });
+    if (incomeToEdit) {
+      updateIncome(incomeToEdit.id, {
+        description: description.trim(),
+        amount: numAmount,
+        categoryId,
+        date,
+        isRecurring,
+        recurringDay: isRecurring ? recurringDay : undefined,
+        status,
+        notes: notes.trim(),
+      });
+    } else {
+      addIncome({
+        description: description.trim(),
+        amount: numAmount,
+        categoryId,
+        date,
+        isRecurring,
+        recurringDay: isRecurring ? recurringDay : undefined,
+        status,
+        notes: notes.trim(),
+      });
+    }
 
     onClose();
   };
@@ -80,11 +107,20 @@ export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose 
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-indigo-400" />
-              Cadastrar Nova Receita
+              {incomeToEdit ? (
+                <>
+                  <Edit3 className="w-5 h-5 text-indigo-400" />
+                  Editar Receita
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-5 h-5 text-indigo-400" />
+                  Cadastrar Nova Receita
+                </>
+              )}
             </h3>
             <p className="text-xs text-slate-400">
-              Adicione salários, freelances e rendimentos ao saldo
+              {incomeToEdit ? 'Corrija valores ou dados cadastrados incorretamente' : 'Adicione salários, freelances e rendimentos ao saldo'}
             </p>
           </div>
           <button 
@@ -231,7 +267,7 @@ export const NewIncomeModal: React.FC<NewIncomeModalProps> = ({ isOpen, onClose 
               className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
             >
               <Check className="w-4 h-4" />
-              Cadastrar Receita
+              {incomeToEdit ? 'Salvar Alterações' : 'Cadastrar Receita'}
             </button>
           </div>
         </form>

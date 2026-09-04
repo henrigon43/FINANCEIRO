@@ -17,7 +17,8 @@ import {
   LogOut,
   ArrowLeft,
   Shield,
-  FileSignature
+  FileSignature,
+  Heart
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +34,7 @@ export type NavTab =
   | 'forecast' 
   | 'reports' 
   | 'goals' 
+  | 'donation'
   | 'settings'
   | 'users';
 
@@ -71,9 +73,11 @@ export const Navigation: React.FC<NavigationProps> = ({ currentTab, onSelectTab 
     { id: 'calendar', label: 'Calendário', icon: CalendarDays },
     { id: 'cards', label: 'Cartões', icon: CreditCard },
     { id: 'recurring', label: 'Recorrentes', icon: Repeat },
+    { id: 'contracts', label: 'Contratos', icon: FileSignature },
     { id: 'forecast', label: 'Previsão', icon: Sparkles },
     { id: 'reports', label: 'Relatórios', icon: BarChart3 },
     { id: 'goals', label: 'Metas', icon: Target },
+    { id: 'donation', label: 'Doação', icon: Heart },
     ...(isMasterAdmin ? [{ id: 'users' as NavTab, label: 'Usuários', icon: Users }] : []),
   ];
 

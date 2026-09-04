@@ -1095,6 +1095,32 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       createdAt: new Date().toISOString(),
     };
     setContracts(prev => [...prev, newContract]);
+
+    // Automatically add to expenses as requested by user
+    const targetCat = contractData.type === 'financiamento_imovel'
+      ? (categories.find(c => c.name.toLowerCase().includes('moradia')) || categories[0])
+      : (categories.find(c => c.name.toLowerCase().includes('transporte')) || categories[0]);
+
+    const upcomingNumber = Math.min(contractData.totalMonths, contractData.paidMonths + 1);
+    const newExpense: Expense = {
+      id: `exp-contract-${id}-${upcomingNumber}`,
+      description: `${contractData.title} (${upcomingNumber}/${contractData.totalMonths})`,
+      amount: contractData.monthlyPayment,
+      categoryId: targetCat?.id || categories[0]?.id || 'cat-moradia',
+      purchaseDate: contractData.startDate || toDateString(new Date()),
+      dueDate: contractData.nextDueDate,
+      paymentMethod: contractData.paymentMethod,
+      cardId: contractData.cardId,
+      type: 'parcelada',
+      status: 'pendente',
+      installmentNumber: upcomingNumber,
+      totalInstallments: contractData.totalMonths,
+      contractId: id,
+      notes: `Financiado por ${contractData.financialInstitution}. Saldo devedor: R$ ${Number(contractData.outstandingBalance || 0).toLocaleString('pt-BR')}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    setExpenses(prev => [...prev, newExpense]);
   };
 
   const updateContract = (id: string, data: Partial<FinancialContract>) => {
